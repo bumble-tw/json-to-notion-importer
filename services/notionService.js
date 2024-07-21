@@ -1,21 +1,21 @@
-// notionService
-const { parseDirectory } = require("../utils/directoryParser")
+// services/notionService
+const parseDirectory = require("../utils/directoryParser")
+const notionRepo = require("../repositories/notionRepo")
 
-async function app({ notion, databaseId }) {
-  try {
-    const notionRepo = require("../repositories/notionRepo")({
-      notion,
-      databaseId,
-    })
+module.exports = {
+  postTask: async ({ planName, databaseId, platformName }) => {
+    try {
+      const parentPageId = await notionRepo.findParentPageId({
+        databaseId,
+        planName,
+      })
 
-    const parentPageId = await notionRepo.findParentPageId({
-      PlanName: "Heptabase筆記教學課程",
-    })
-    const data = parseDirectory()
-    await notionRepo.addItemsToDatabase({ data, parentPageId })
-  } catch (error) {
-    console.error("發生錯誤:", error)
-  }
+      const data = await parseDirectory({ platformName })
+
+      await notionRepo.addItemsToDatabase({ data, parentPageId, databaseId })
+    } catch (error) {
+      console.error("發生錯誤:", error)
+    }
+  },
+  getAllPlans: notionRepo.getAllPlans,
 }
-
-module.exports = app
