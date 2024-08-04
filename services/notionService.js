@@ -1,6 +1,6 @@
 // services/notionService
 const parseDirectory = require("../utils/directoryParser")
-const notionRepo = require("../repositories/notionRepo")
+const repos = require("../repositories")
 const inquirer = require("inquirer")
 
 const PLATFORMS = ["PressPlay", "Hahow", "Hiskio", "Udemy", "Youtube"]
@@ -8,7 +8,7 @@ const PLATFORMS = ["PressPlay", "Hahow", "Hiskio", "Udemy", "Youtube"]
 module.exports = {
   addTask: async () => {
     try {
-      const plans = await notionRepo.getAllPlans()
+      const plans = await repos.notion.getAllPlans()
 
       const { plan: planName } = await inquirer.prompt([
         {
@@ -30,11 +30,11 @@ module.exports = {
 
       const data = await parseDirectory({ platformName })
 
-      const parentPageId = await notionRepo.findParentPageId({
+      const parentPageId = await repos.notion.findParentPageId({
         planName,
       })
 
-      await notionRepo.addItemsToDatabase({ data, parentPageId })
+      await repos.notion.addItemsToDatabase({ data, parentPageId })
 
       console.log("任務新增成功")
     } catch (error) {

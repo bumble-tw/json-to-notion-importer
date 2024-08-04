@@ -1,4 +1,5 @@
 // repositories/notionRepo.js
+
 const db = require("../models")
 const databaseId = process.env.NOTION_DATABASE_ID
 

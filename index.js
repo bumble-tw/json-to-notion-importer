@@ -1,5 +1,5 @@
 // index.js
-const app = require("./services/notionService")
+const svc = require("./services")
 const inquirer = require("inquirer")
 
 const choices = [
@@ -22,7 +22,7 @@ const promptUser = async () => {
       console.log("退出程序")
       return
     } else {
-      await app[action]()
+      await svc.notion[action]()
       await promptUser() // 執行完成後再次詢問
     }
   } catch (error) {
