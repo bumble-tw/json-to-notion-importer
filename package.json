@@ -12,7 +12,9 @@
   "license": "MIT",
   "dependencies": {
     "@notionhq/client": "^2.2.15",
+    "fast-csv": "^5.0.1",
     "inquirer": "^8.2.6",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "xlsx": "^0.18.5"
   }
 }

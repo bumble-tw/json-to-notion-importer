@@ -1,9 +1,10 @@
 // index.js
-const svc = require("./services")
 const inquirer = require("inquirer")
+const svc = require("./services")
 
 const choices = [
   { label: "新增任務", value: "addTask" },
+  { label: "同步 CSV 到 Notion", value: "syncCSVNewPageToNotion" },
   { label: "退出", value: "exit" },
 ]
 

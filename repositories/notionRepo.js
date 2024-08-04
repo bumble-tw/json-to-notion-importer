@@ -137,4 +137,62 @@ module.exports = {
       throw error
     }
   },
+  getAllDatabases: async () => {
+    try {
+      const response = await db.notion.search({
+        filter: {
+          value: "database",
+          property: "object",
+        },
+      })
+
+      return response.results.map((database) => ({
+        id: database.id,
+        title: database.title[0]?.text?.content || "無標題",
+      }))
+    } catch (error) {
+      console.error("查詢所有資料庫時發生錯誤:", error)
+      throw error
+    }
+  },
+  getHeader: async () => {
+    try {
+      const response = await db.notion.databases.retrieve({
+        database_id: databaseId,
+      })
+
+      return Object.keys(response.properties)
+    } catch (error) {
+      console.error("查詢資料庫標題時發生錯誤:", error)
+      throw error
+    }
+  },
+  getDatabaseData: async () => {
+    try {
+      const response = await db.notion.databases.query({
+        database_id: databaseId,
+      })
+      return response.results.map(({ properties }) => properties)
+    } catch (error) {
+      console.log("查詢資料庫資料時發生錯誤:", error)
+    }
+  },
+  createPage: async ({ data }) => {
+    try {
+      const pageData = {
+        parent: { database_id: databaseId },
+        properties: data,
+      }
+
+      try {
+        const response = await db.notion.pages.create(pageData)
+        return response
+      } catch (error) {
+        console.error("Error creating Notion page:", error)
+        throw error
+      }
+    } catch (error) {
+      console.error("新增項目時發生錯誤:", error)
+    }
+  },
 }
