@@ -1,5 +1,6 @@
 // repositories/notionRepo.js
 const db = require("../models")
+const databaseId = process.env.NOTION_DATABASE_ID
 
 const calculateStatus = (record) => {
   let status
@@ -20,7 +21,7 @@ const calculateStatus = (record) => {
 }
 
 module.exports = {
-  findParentPageId: async ({ databaseId, planName }) => {
+  findParentPageId: async ({ planName }) => {
     try {
       const response = await db.notion.databases.query({
         database_id: databaseId,
@@ -42,7 +43,7 @@ module.exports = {
       throw error
     }
   },
-  addItemsToDatabase: async ({ data, parentPageId, databaseId }) => {
+  addItemsToDatabase: async ({ data, parentPageId }) => {
     const promises = data.map(async (item) => {
       try {
         const pageData = {
@@ -96,7 +97,7 @@ module.exports = {
 
     await Promise.all(promises)
   },
-  getAllPlans: async (databaseId) => {
+  getAllPlans: async () => {
     try {
       const response = await db.notion.databases.query({
         database_id: databaseId,
