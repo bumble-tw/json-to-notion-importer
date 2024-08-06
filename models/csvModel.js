@@ -2,8 +2,30 @@ const fs = require("fs")
 const path = require("path")
 const fastCSV = require("fast-csv")
 const XLSX = require("xlsx")
-
 const dataDir = path.resolve(__dirname, "../data")
+
+function readExistingData(dataDir) {
+  const files = fs.readdirSync(dataDir)
+  const validFiles = files.filter((file) => {
+    const ext = path.extname(file).toLowerCase()
+    return ext === ".csv" || ext === ".xlsx"
+  })
+
+  if (validFiles.length === 0) {
+    console.error("data資料夾中，找不到CSV或XLSX檔案")
+    return
+  }
+
+  if (validFiles.length > 1) {
+    console.error("data資料夾中，只能有一個CSV或XLSX檔案")
+    return
+  }
+
+  const filePath = path.join(dataDir, validFiles[0])
+  const ext = path.extname(validFiles[0]).toLowerCase()
+
+  return { filePath, ext }
+}
 
 function writeCSV(data, filePath) {
   const ws = fs.createWriteStream(filePath)
@@ -59,29 +81,72 @@ function readExcel(filePath) {
   }
 }
 
+function writeCSVCell(data, filePath, columnName, rowIndex) {
+  const headers = []
+  const csvData = []
+
+  fs.createReadStream(filePath)
+    .pipe(fastCSV.parse({ headers: true }))
+    .on("data", (row) => {
+      if (headers.length === 0) {
+        headers.push(...Object.keys(row))
+      }
+      csvData.push(row)
+    })
+    .on("end", () => {
+      const colIndex = headers.indexOf(columnName)
+      if (colIndex === -1) {
+        console.error(`欄位名稱 ${columnName} 不存在於 CSV 檔案中`)
+        return
+      }
+
+      if (!csvData[rowIndex]) {
+        csvData[rowIndex] = {}
+      }
+      csvData[rowIndex][columnName] = data
+
+      writeCSV(csvData, filePath)
+    })
+    .on("error", (error) => {
+      console.error("讀取 CSV 檔案時發生錯誤：", error.message)
+    })
+}
+
+function writeExcelCell(data, filePath, sheetName, columnName, rowIndex) {
+  const workbook = fs.existsSync(filePath)
+    ? XLSX.readFile(filePath)
+    : XLSX.utils.book_new()
+  const worksheet = workbook.Sheets[sheetName] || XLSX.utils.aoa_to_sheet([])
+  const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0] || []
+  const colIndex = headers.indexOf(columnName)
+
+  if (colIndex === -1) {
+    console.error(`欄位名稱 ${columnName} 不存在於工作表中`)
+    return
+  }
+
+  const cellAddress = XLSX.utils.encode_cell({ c: colIndex, r: rowIndex })
+  worksheet[cellAddress] = { v: data }
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
+  XLSX.writeFile(workbook, filePath)
+  console.log(
+    `資料已寫入 ${sheetName} 工作表的 ${columnName}${rowIndex + 1} 儲存格中`
+  )
+}
+
 module.exports = {
   readData: async function (callback) {
     try {
-      const files = await fs.promises.readdir(dataDir)
-      let fileProcessed = false
-
-      for (const file of files) {
-        if (fileProcessed) break
-
-        const filePath = path.join(dataDir, file)
-        const ext = path.extname(file).toLowerCase()
-
-        if (ext === ".csv") {
-          fileProcessed = true
-          const csvData = await readCSV(filePath)
-          if (callback) callback(csvData)
-          return csvData
-        } else if (ext === ".xlsx") {
-          fileProcessed = true
-          const excelData = readExcel(filePath)
-          if (callback) callback(excelData)
-          return excelData
-        }
+      const { filePath, ext } = readExistingData(dataDir)
+      if (ext === ".csv") {
+        const csvData = await readCSV(filePath)
+        if (callback) callback(csvData)
+        return csvData
+      } else if (ext === ".xlsx") {
+        const excelData = readExcel(filePath)
+        if (callback) callback(excelData)
+        return excelData
       }
     } catch (error) {
       console.error("解析 CSV/XLSX 失敗", error)
@@ -95,6 +160,23 @@ module.exports = {
       writeCSV(data, filePath)
     } else if (ext === ".xlsx") {
       writeExcel(data, filePath)
+    } else {
+      console.error("不支援的檔案格式")
+    }
+  },
+  writeToCell: function (data, columnName, rowIndex, sheetName) {
+    const { filePath, ext } = readExistingData(dataDir)
+
+    if (ext === ".csv") {
+      writeCSVCell(data, filePath, columnName, rowIndex)
+    } else if (ext === ".xlsx") {
+      writeExcelCell(
+        data,
+        filePath,
+        sheetName || "Sheet1",
+        columnName,
+        rowIndex
+      )
     } else {
       console.error("不支援的檔案格式")
     }

@@ -155,18 +155,7 @@ module.exports = {
       throw error
     }
   },
-  getHeader: async () => {
-    try {
-      const response = await db.notion.databases.retrieve({
-        database_id: databaseId,
-      })
-
-      return Object.keys(response.properties)
-    } catch (error) {
-      console.error("查詢資料庫標題時發生錯誤:", error)
-      throw error
-    }
-  },
+  // 取得資料庫資料
   getDatabaseData: async () => {
     try {
       const response = await db.notion.databases.query({
@@ -177,6 +166,18 @@ module.exports = {
       console.log("查詢資料庫資料時發生錯誤:", error)
     }
   },
+  // 取得資料庫屬性及選項
+  getDatabasePropertiesOption: async () => {
+    try {
+      const response = await db.notion.databases.retrieve({
+        database_id: databaseId,
+      })
+      return response.properties
+    } catch (error) {
+      console.error("查詢屬性選項時發生錯誤:", error)
+    }
+  },
+  // 新增一列資料
   createPage: async ({ data }) => {
     try {
       const pageData = {

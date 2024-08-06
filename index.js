@@ -3,9 +3,11 @@ const inquirer = require("inquirer")
 const svc = require("./services")
 
 const choices = [
-  { label: "新增任務", value: "addTask" },
-  { label: "同步 CSV 到 Notion", value: "syncCSVNewPageToNotion" },
-  { label: "退出", value: "exit" },
+  // { label: "新增任務", value: "addTask" },
+  { name: "取得 Notion 資料庫資料", value: "getNotionDatabaseData" },
+  { name: "同步 CSV 到 Notion", value: "syncCSVNewRowToNotion" },
+  { name: "寫入 儲存格 測試", value: "writeCellTest" },
+  { name: "退出", value: "exit" },
 ]
 
 const promptUser = async () => {

@@ -2,6 +2,8 @@
 const parseDirectory = require("../utils/directoryParser")
 const repos = require("../repositories")
 const inquirer = require("inquirer")
+const { consoleDetail } = require("../utils/consoleTool")
+const consoleTool = require("../utils/consoleTool")
 
 const PLATFORMS = ["PressPlay", "Hahow", "Hiskio", "Udemy", "Youtube"]
 
@@ -41,14 +43,23 @@ module.exports = {
       console.error("任務新增失敗", error)
     }
   },
-  syncCSVNewPageToNotion: async () => {
+  getNotionDatabaseData: async () => {
+    try {
+      const databaseData = await repos.notion.getDatabaseData()
+      // consoleDetail("Notion 資料庫資料", databaseData[0])
+      const propertiesOption = await repos.notion.getDatabasePropertiesOption()
+      consoleDetail("Notion 資料庫屬性", propertiesOption, true, false)
+    } catch (error) {
+      console.log("取得資料庫資料失敗", error)
+    }
+  },
+  syncCSVNewRowToNotion: async () => {
     try {
       const csvData = await repos.csv.parseData()
       const csvHeader = csvData[0]
       const csvRows = csvData.slice(1)
 
       const databaseData = await repos.notion.getDatabaseData()
-      console.log("databaseData: ", databaseData[0])
       const databaseIDs = new Set(
         databaseData.map((item) => item.ID.unique_id.number.toString())
       )
@@ -60,6 +71,8 @@ module.exports = {
         for (let i = 0; i < csvHeader.length; i++) {
           rowData[csvHeader[i]] = row[i]
         }
+
+        consoleTool.consoleDetail("CSV Row Data", rowData)
 
         if (!databaseIDs.has(rowData.ID)) {
           // 將新的項目儲存在 newPages 中
@@ -158,10 +171,20 @@ module.exports = {
 
       // 遍歷 newPages 呼叫 create function
       for (const page of newPages) {
-        await repos.notion.createPage({ data: page })
+        // await repos.notion.createPage({ data: page })
       }
     } catch (error) {
       console.log("同步失敗", error)
+    }
+  },
+  writeCellTest: async () => {
+    try {
+      const data = "test"
+      const columnName = "ID"
+      const rowIndex = 90
+      await repos.csv.writeCell({ data, columnName, rowIndex })
+    } catch (error) {
+      console.error("Error writing cell:", error)
     }
   },
 }
