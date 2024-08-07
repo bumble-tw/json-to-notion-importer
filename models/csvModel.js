@@ -28,7 +28,8 @@ function readExistingData(dataDir) {
 }
 
 function writeCSV(data, filePath) {
-  const ws = fs.createWriteStream(filePath)
+  const ws = fs.createWriteStream(filePath, { encoding: "utf8" })
+  ws.write("\ufeff") // 在文件的開頭寫入 UTF-8 BOM
   fastCSV
     .write(data, { headers: true })
     .pipe(ws)
