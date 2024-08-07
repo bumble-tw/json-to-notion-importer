@@ -85,7 +85,7 @@ function writeCSVCell(data, filePath, columnName, rowIndex) {
   const headers = []
   const csvData = []
 
-  fs.createReadStream(filePath)
+  fs.createReadStream(filePath, { encoding: "utf-8" }) // 確保使用 UTF-8 編碼
     .pipe(fastCSV.parse({ headers: true }))
     .on("data", (row) => {
       if (headers.length === 0) {
